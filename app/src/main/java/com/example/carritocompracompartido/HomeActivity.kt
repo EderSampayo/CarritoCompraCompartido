@@ -9,7 +9,8 @@ import androidx.activity.result.ActivityResultLauncher
 import com.google.firebase.auth.FirebaseAuth
 
 enum class ProviderType {
-    BASIC
+    BASIC,
+    GOOGLE
 }
 
 class HomeActivity : AppCompatActivity() {
@@ -32,6 +33,12 @@ class HomeActivity : AppCompatActivity() {
         val email = bundle?.getString("email")
         val provider = bundle?.getString("provider")
         setup(email ?: "", provider ?: "")
+
+        // Guardado de datos (sesión)
+        val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE).edit()
+        prefs.putString("email", email)
+        prefs.putString("provider", provider)
+        prefs.apply()   // Asegurarnos de que se guarden los datos en la app
     }
 
     private fun setup(email: String, provider: String) {
@@ -41,6 +48,11 @@ class HomeActivity : AppCompatActivity() {
         providerTextView.text = provider
 
         logOutButton.setOnClickListener {
+            // Borrado de datos (sesión)
+            val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE).edit()
+            prefs.clear()
+            prefs.apply()
+
             FirebaseAuth.getInstance().signOut()
             onBackPressed()
         }

@@ -1,10 +1,10 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.CarritoCompraCompartido" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.CarritoCompraCompartido" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your light theme here. -->
-        <item name="colorPrimary">@color/azul600</item> -->
-        <item name="colorPrimaryDark">@color/marino</item> -->
-        <item name="colorAccent">@color/ambar</item> -->
+        <item name="colorPrimary">@null</item>
+        <item name="colorPrimaryDark">@null</item>
+        <item name="colorAccent">@null</item>
         <item name="background">@color/background</item>
     </style>
 

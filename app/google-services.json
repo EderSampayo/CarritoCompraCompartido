@@ -12,7 +12,20 @@
           "package_name": "com.example.carritocompracompartido"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "864842660900-h9d2hhntj1t5h3vdbpme79plo09loe77.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.carritocompracompartido",
+            "certificate_hash": "5ec48c25495eee51cf383058e4097279c0979840"
+          }
+        },
+        {
+          "client_id": "864842660900-78mae1g5bv0ehgs33kuck2i27vgl0ct4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBBkfF7WdrBQ7aioPpD2c3R8kHQ1ubdwdc"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "864842660900-78mae1g5bv0ehgs33kuck2i27vgl0ct4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
