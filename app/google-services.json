@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "864842660900",
+    "project_id": "carritocompracompartido",
+    "storage_bucket": "carritocompracompartido.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:864842660900:android:1f76b5416617cd0d13acb1",
+        "android_client_info": {
+          "package_name": "com.example.carritocompracompartido"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBkfF7WdrBQ7aioPpD2c3R8kHQ1ubdwdc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
