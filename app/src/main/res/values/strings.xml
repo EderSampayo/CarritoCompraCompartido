@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">CarritoCompraCompartido</string>
     <string name="prefs_file">com.example.carritocompracompartido.PREFERENCE_FILE_KEY</string>
-    <string name="default_web_client_id">864842660900-h9d2hhntj1t5h3vdbpme79plo09loe77.apps.googleusercontent.com</string>
+    <string name="default_web_client_id">864842660900-78mae1g5bv0ehgs33kuck2i27vgl0ct4.apps.googleusercontent.com</string>
 </resources>
