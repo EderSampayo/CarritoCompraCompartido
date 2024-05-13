@@ -3,6 +3,8 @@ package com.example.carritocompracompartido
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
@@ -57,4 +59,37 @@ class HomeActivity : AppCompatActivity() {
             onBackPressed()
         }
     }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_home, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            /*R.id.perfil -> {
+                // Crear un Intent para iniciar la actividad del perfil
+                val profileIntent = Intent(this, ProfileActivity::class.java)
+                startActivity(profileIntent)
+                true
+            }*/
+            R.id.cerrar_sesion -> {
+                // Borrado de datos (sesión)
+                val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE).edit()
+                prefs.clear()
+                prefs.apply()
+
+                // Cerrar sesión
+                FirebaseAuth.getInstance().signOut()
+
+                // Navegar hacia atrás
+                onBackPressed()
+
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+
 }
