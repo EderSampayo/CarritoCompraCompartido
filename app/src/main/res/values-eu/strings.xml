@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CarritoCompraCompartido</string>
+    <string name="prefs_file">com.example.carritocompracompartido.PREFERENCE_FILE_KEY</string>
+    <string name="default_web_client_id">864842660900-78mae1g5bv0ehgs33kuck2i27vgl0ct4.apps.googleusercontent.com</string>
+    <string-array name="languages">
+        <item>Seleccionar Idioma</item>
+        <item>es</item>
+        <item>eu</item>
+        <item>en</item>
+    </string-array>
+    <string-array name="themes">
+        <item>Select Theme</item>
+        <item>Light</item>
+        <item>Dark</item>
+        <item>System</item>
+    </string-array>
+</resources>
