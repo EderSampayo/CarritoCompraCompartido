@@ -29,6 +29,8 @@ class AuthActivity : AppCompatActivity() {
     private lateinit var googleButton: Button
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Utils.setLanguage(this)
+        Utils.setTheme(this)
         setContentView(R.layout.activity_auth)
 
         // Elementos del layout XML
