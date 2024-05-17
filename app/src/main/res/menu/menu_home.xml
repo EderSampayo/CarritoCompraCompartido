@@ -9,7 +9,7 @@
         android:orderInCategory="100"
         app:showAsAction="ifRoom"/>
 
-    <item android:title="PERFÍL"
+    <item android:title="PERFIL"
         android:id="@+id/perfil"
         android:orderInCategory="100"
         app:showAsAction="ifRoom"/>
