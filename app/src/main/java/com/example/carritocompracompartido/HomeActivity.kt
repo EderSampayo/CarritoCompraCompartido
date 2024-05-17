@@ -80,6 +80,8 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Utils.setLanguage(this)
+        Utils.setTheme(this)
         setContentView(R.layout.activity_home)
 
         // Setup
