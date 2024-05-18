@@ -10,4 +10,5 @@
     <color name="marino">#1B3A57</color>
     <color name="coral">#FF8A65</color>
     <color name="background">#E5EAF0</color>
+    <color name="icon_color">#FFFFFF</color>
 </resources>
