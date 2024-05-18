@@ -3,6 +3,7 @@ package com.example.carritocompracompartido
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -35,6 +36,23 @@ object Utils {
             "System" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             else -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
+    }
+
+    fun ponerPreferencia(context: Context, key: String, value: String) {
+        val prefs: SharedPreferences.Editor = context.getSharedPreferences(context.getString(R.string.prefs_file), Context.MODE_PRIVATE).edit()
+        prefs.putString(key, value)
+        prefs.apply()
+    }
+
+    fun obtenerPreferencia(context: Context, key: String): String? {
+        val prefs: SharedPreferences = context.getSharedPreferences(context.getString(R.string.prefs_file), Context.MODE_PRIVATE)
+        return prefs.getString(key, null)
+    }
+
+    fun limpiarPreferencias(context: Context) {
+        val prefs: SharedPreferences.Editor = context.getSharedPreferences(context.getString(R.string.prefs_file), Context.MODE_PRIVATE).edit()
+        prefs.clear()
+        prefs.apply()
     }
 
 }
