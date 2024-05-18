@@ -1,7 +1,22 @@
 <resources>
-    <string name="app_name">CarritoCompraCompartido</string>
     <string name="prefs_file">com.example.carritocompracompartido.PREFERENCE_FILE_KEY</string>
     <string name="default_web_client_id">864842660900-78mae1g5bv0ehgs33kuck2i27vgl0ct4.apps.googleusercontent.com</string>
+    <string name="app_name">SharedShoppingCart</string>
+    <string name="edit">Edit</string>
+    <string name="home">Home</string>
+    <string name="logout">Log Out</string>
+    <string name="profile">Profile</string>
+    <string name="list_name_hint">List Name</string>
+    <string name="emails_hint">Invited Users Emails</string>
+    <string name="edit_list_title">Edit List</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="list_updated">List updated</string>
+    <string name="error_updating_list">Error updating list</string>
+    <string name="list_name_empty">The list name cannot be empty</string>
+    <string name="no_name">No name</string>
+    <string name="products">products</string>
+    <string name="add_list">Add List</string>
     <string-array name="languages">
         <item>Select Language</item>
         <item>es</item>

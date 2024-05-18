@@ -1,21 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:padding="16dp">
 
-    <EditText
-        android:id="@+id/listNameEditText"
+    <LinearLayout
+        android:id="@+id/dialogContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nombre de la lista"
-        android:minHeight="48dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <EditText
-        android:id="@+id/emailsEditText"
-        android:layout_width="match_parent"
+        <EditText
+            android:id="@+id/listNameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/list_name_hint"
+            android:minHeight="48dp" />
+
+        <EditText
+            android:id="@+id/emailsEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/emails_hint" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/addListButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="Correos electrónicos de los usuarios (separados por comas)" />
-</LinearLayout>
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"
+        android:text="@string/add_list"
+        android:backgroundTint="?attr/colorPrimary"
+        android:textColor="@android:color/white" />
+
+</RelativeLayout>

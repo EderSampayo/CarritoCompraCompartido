@@ -1,8 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CarritoCompraCompartido</string>
     <string name="prefs_file">com.example.carritocompracompartido.PREFERENCE_FILE_KEY</string>
     <string name="default_web_client_id">864842660900-78mae1g5bv0ehgs33kuck2i27vgl0ct4.apps.googleusercontent.com</string>
+    <string name="app_name">ErosketaOrriPartekatua</string>
+    <string name="edit">Editatu</string>
+    <string name="home">Hasiera</string>
+    <string name="logout">Saioa Itxi</string>
+    <string name="profile">Profila</string>
+    <string name="list_name_hint">Zerrendaren Izena</string>
+    <string name="emails_hint">Gonbidatutako Erabiltzaileen Postak</string>
+    <string name="edit_list_title">Zerrenda Editatu</string>
+    <string name="save">Gorde</string>
+    <string name="cancel">Utzi</string>
+    <string name="list_updated">Zerrenda eguneratuta</string>
+    <string name="error_updating_list">Errorea zerrenda eguneratzean</string>
+    <string name="list_name_empty">Zerrendaren izena ezin da hutsik egon</string>
+    <string name="no_name">Izenik gabe</string>
+    <string name="products">produktuak</string>
+    <string name="add_list">Zerrenda Gehitu</string>
     <string-array name="languages">
         <item>Seleccionar Idioma</item>
         <item>es</item>
