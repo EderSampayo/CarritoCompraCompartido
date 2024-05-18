@@ -153,6 +153,13 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.perfil -> {
+                // Crear un Intent para iniciar la actividad del perfil
+                val profileIntent = Intent(this, ProfileActivity::class.java)
+                startActivity(profileIntent)
+                finish()
+                true
+            }
             R.id.cerrar_sesion -> {
                 // Borrar datos de sesión
                 val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE).edit()
