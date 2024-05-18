@@ -16,17 +16,23 @@
     <string name="list_name_empty">El nombre de la lista no puede estar vacío</string>
     <string name="no_name">Sin nombre</string>
     <string name="products">productos</string>
+    <string name="add_product">Añadir Producto</string>
+    <string name="add">Añadir</string>
+    <string name="purchased">Comprados</string>
+    <string name="to_buy">Por Comprar</string>
     <string name="add_list">Añadir Lista</string>
+    <string name="select_language">Seleccionar Idioma</string>
+    <string name="select_theme">Seleccionar Tema</string>
+    <string name="product_name_hint">Nombre del producto</string>
+    <string name="added_items">Artículos Añadidos</string>
     <string-array name="languages">
-        <item>Seleccionar Idioma</item>
         <item>es</item>
         <item>eu</item>
         <item>en</item>
     </string-array>
     <string-array name="themes">
-        <item>Select Theme</item>
-        <item>Light</item>
-        <item>Dark</item>
-        <item>System</item>
+        <item>Claro</item>
+        <item>Oscuro</item>
+        <item>Sistema</item>
     </string-array>
 </resources>

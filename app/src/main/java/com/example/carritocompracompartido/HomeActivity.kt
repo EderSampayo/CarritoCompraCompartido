@@ -129,7 +129,7 @@ class HomeActivity : AppCompatActivity() {
                     imageView.layoutParams = LinearLayout.LayoutParams(32.dpToPx(), 32.dpToPx()).apply {
                         marginEnd = 4.dpToPx()
                     }
-                    imageView.setImageResource(R.drawable.ic_add_user) // Usar un ícono con un símbolo "+"
+                    imageView.setImageResource(R.drawable.ic_add) // Usar un ícono con un símbolo "+"
                     holder.userImageLayout.addView(imageView)
                     break
                 }

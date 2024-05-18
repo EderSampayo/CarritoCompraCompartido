@@ -16,15 +16,21 @@
     <string name="list_name_empty">The list name cannot be empty</string>
     <string name="no_name">No name</string>
     <string name="products">products</string>
+    <string name="add_product">Add Product</string>
+    <string name="add">Add</string>
+    <string name="purchased">Purchased</string>
+    <string name="to_buy">To Buy</string>
     <string name="add_list">Add List</string>
+    <string name="select_language">Select Language</string>
+    <string name="select_theme">Select Theme</string>
+    <string name="product_name_hint">Product Name</string>
+    <string name="added_items">Added Items</string>
     <string-array name="languages">
-        <item>Select Language</item>
         <item>es</item>
         <item>eu</item>
         <item>en</item>
     </string-array>
     <string-array name="themes">
-        <item>Select Theme</item>
         <item>Light</item>
         <item>Dark</item>
         <item>System</item>

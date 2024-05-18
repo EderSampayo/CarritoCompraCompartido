@@ -1,11 +1,8 @@
 package com.example.carritocompracompartido
 
-import android.annotation.TargetApi
-import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import java.util.Locale
@@ -16,13 +13,7 @@ object Utils {
             AppCompatActivity.MODE_PRIVATE
         )
         val languageCode = prefs.getString("locale", "en") ?: "en"
-        val locale = Locale(languageCode)
-        Locale.setDefault(locale)
-        val resources = context.resources
-        val configuration = resources.configuration
-        configuration.setLocale(locale)
-        configuration.setLayoutDirection(locale)
-        resources.updateConfiguration(configuration, resources.displayMetrics)
+        updateLanguage(context, languageCode)
     }
 
     fun setTheme(context: Context) {
@@ -55,4 +46,13 @@ object Utils {
         prefs.apply()
     }
 
+    private fun updateLanguage(context: Context, languageCode: String) {
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val resources = context.resources
+        val configuration = Configuration(resources.configuration)
+        configuration.setLocale(locale)
+        context.createConfigurationContext(configuration)
+        resources.updateConfiguration(configuration, resources.displayMetrics)
+    }
 }

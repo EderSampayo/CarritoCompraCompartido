@@ -16,17 +16,23 @@
     <string name="list_name_empty">Zerrendaren izena ezin da hutsik egon</string>
     <string name="no_name">Izenik gabe</string>
     <string name="products">produktuak</string>
+    <string name="add_product">Produktua Gehitu</string>
+    <string name="add">Gehitu</string>
+    <string name="purchased">Erosi</string>
+    <string name="to_buy">Erosi Behar</string>
     <string name="add_list">Zerrenda Gehitu</string>
+    <string name="select_language">Hizkuntza Aukeratu</string>
+    <string name="select_theme">Gai Aukeratu</string>
+    <string name="product_name_hint">Produktuaren Izena</string>
+    <string name="added_items">Gehitutako Artikuluak</string>
     <string-array name="languages">
-        <item>Seleccionar Idioma</item>
         <item>es</item>
         <item>eu</item>
         <item>en</item>
     </string-array>
     <string-array name="themes">
-        <item>Select Theme</item>
-        <item>Light</item>
-        <item>Dark</item>
-        <item>System</item>
+        <item>Argia</item>
+        <item>Iluna</item>
+        <item>Sistema</item>
     </string-array>
 </resources>
