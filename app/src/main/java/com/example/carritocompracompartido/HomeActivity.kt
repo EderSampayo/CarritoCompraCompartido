@@ -23,6 +23,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.util.Util
 
 enum class ProviderType {
     BASIC,
@@ -153,18 +154,23 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.perfil -> {
-                // Crear un Intent para iniciar la actividad del perfil
-                val profileIntent = Intent(this, ProfileActivity::class.java)
-                startActivity(profileIntent)
+            R.id.home -> {
+                val intent = Intent(this, HomeActivity::class.java)
+                startActivity(intent)
                 finish()
+                // return true
+                true
+            }
+            R.id.perfil -> {
+                val intent = Intent(this, ProfileActivity::class.java)
+                startActivity(intent)
+                finish()
+                // return true
                 true
             }
             R.id.cerrar_sesion -> {
                 // Borrar datos de sesión
-                val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE).edit()
-                prefs.clear()
-                prefs.apply()
+                Utils.limpiarPreferencias(this)
 
                 // Cerrar sesión
                 FirebaseAuth.getInstance().signOut()
