@@ -7,12 +7,18 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.util.Util
+import com.google.firebase.ktx.Firebase
 
 /**Extraído de MoureDev
 Vídeo: https://www.youtube.com/watch?v=dpURgJ4HkMk&t=25s
@@ -20,6 +26,8 @@ Autor: https://www.youtube.com/@mouredev
  **/
 class AuthActivity : AppCompatActivity() {
     private val GOOGLE_SIGN_IN = 100
+    private lateinit var auth: FirebaseAuth
+    private val PLAY_SERVICES_RESOLUTION_REQUEST = 9000
     // Declarar elementos de la UI como atributos de la clase
     private lateinit var signUpButton: Button
     private lateinit var loginButton: Button
@@ -41,6 +49,12 @@ class AuthActivity : AppCompatActivity() {
         authLayout = findViewById(R.id.authLayout)
         googleButton = findViewById(R.id.googleButton)
 
+        if (checkGooglePlayServices()) {
+            setup()
+        } else {
+            Toast.makeText(this, "Google Play Services required", Toast.LENGTH_LONG).show()
+        }
+
         // Setup
         setup()
         session()
@@ -53,9 +67,8 @@ class AuthActivity : AppCompatActivity() {
     }
 
     private fun session() {
-        val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE)
-        val email = prefs.getString("email", null)
-        val provider = prefs.getString("provider", null)
+        val email = Utils.obtenerPreferencia(this, "email")
+        val provider = Utils.obtenerPreferencia(this, "provider")
 
         if (email != null && provider != null) {
             authLayout.visibility = View.INVISIBLE
@@ -71,9 +84,11 @@ class AuthActivity : AppCompatActivity() {
                 FirebaseAuth.getInstance()
                     .createUserWithEmailAndPassword(emailEditText.text.toString(), passwordEditText.text.toString()).addOnCompleteListener {
                         if (it.isSuccessful) {
+                            Utils.ponerPreferencia(this, "email", emailEditText.text.toString())
+                            Utils.ponerPreferencia(this, "provider", ProviderType.BASIC.toString())
                             navigateToHome(it.result?.user?.email ?: "", ProviderType.BASIC)    // Si no existe el email, se manda un string vacío, aunque nunca debería pasar por la comprobación de antes
                         } else {
-                            showAlert()
+                            showAlert("Error", "Se ha producido un error en la autenticación del usuario")
                         }
                     }
             }
@@ -84,16 +99,17 @@ class AuthActivity : AppCompatActivity() {
                 FirebaseAuth.getInstance()
                     .signInWithEmailAndPassword(emailEditText.text.toString(), passwordEditText.text.toString()).addOnCompleteListener {
                         if (it.isSuccessful) {
+                            Utils.ponerPreferencia(this, "email", emailEditText.text.toString())
+                            Utils.ponerPreferencia(this, "provider", ProviderType.BASIC.toString())
                             navigateToHome(it.result?.user?.email ?: "", ProviderType.BASIC)    // Si no existe el email, se manda un string vacío, aunque nunca debería pasar por la comprobación de antes
                         } else {
-                            showAlert()
+                            showAlert("Error", "Se ha producido un error en la autenticación del usuario")
                         }
                     }
             }
         }
 
         googleButton.setOnClickListener {
-            /*
             // Configuracion
 
             val googleConf = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -105,14 +121,13 @@ class AuthActivity : AppCompatActivity() {
             googleClient.signOut()  // Para que no se quede la sesión iniciada, por si tenemos más de una cuenta de Google
 
             startActivityForResult(googleClient.signInIntent, GOOGLE_SIGN_IN)
-            */
         }
     }
 
-    private fun showAlert() {
+    private fun showAlert(titulo: String, texto: String) {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Error")
-        builder.setMessage("Se ha producido un error en la autenticación del usuario")
+        builder.setTitle(titulo)
+        builder.setMessage(texto)
         builder.setPositiveButton("Aceptar", null)
         val dialog: AlertDialog = builder.create()
         dialog.show()
@@ -126,36 +141,51 @@ class AuthActivity : AppCompatActivity() {
         startActivity(homeIntent)
     }
 
-    /*
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == GOOGLE_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-
             try {
-                Log.d("sexo", "sexo")
                 val account = task.getResult(ApiException::class.java)
-                Log.d("sexo2", "sexo2")
-
                 if (account != null) {
-                    Log.d("sexo3", "sexo3")
-                    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-                    Log.d("sexo4", "sexo4")
-
-                    FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            Log.d("sexo5", "sexo5")
-                            navigateToHome(account.email ?: "", ProviderType.GOOGLE)
-                        } else {
-                            showAlert()
-                        }
-                    }
+                    firebaseAuthWithGoogle(account)
                 }
             } catch (e: ApiException) {
-                showAlert()
+                showAlert("Error", "Se ha producido un error en la autenticación del usuario")
             }
         }
     }
-    */
+
+    private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
+        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+        FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener(this) { task ->
+            if (task.isSuccessful) {
+                navigateToHome(account.email ?: "", ProviderType.GOOGLE)
+            } else {
+                showAlert("Error", "Firebase Authentication failed: ${task.exception?.message}")
+            }
+        }
+    }
+
+    private fun checkGooglePlayServices(): Boolean {
+        val googleApiAvailability = GoogleApiAvailability.getInstance()
+        val resultCode = googleApiAvailability.isGooglePlayServicesAvailable(this)
+        return if (resultCode != ConnectionResult.SUCCESS) {
+            if (googleApiAvailability.isUserResolvableError(resultCode)) {
+                googleApiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)?.show()
+            } else {
+                Toast.makeText(this, "This device is not supported.", Toast.LENGTH_LONG).show()
+                finish()
+            }
+            false
+        } else {
+            true
+        }
+    }
+
+    enum class ProviderType {
+        BASIC,
+        GOOGLE
+    }
 }
