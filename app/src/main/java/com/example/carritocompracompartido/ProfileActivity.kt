@@ -50,10 +50,7 @@ class ProfileActivity : AppCompatActivity() {
                 // Código que se ejecuta cuando se selecciona un ítem
                 val selectedItem = parent.getItemAtPosition(position).toString()
                 if (userIsInteracting) {
-                    val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE)
-                    val editor = prefs.edit()
-                    editor.putString(prefsOption, selectedItem)
-                    editor.apply()  // or editor.commit() if you need an immediate return status
+                    Utils.ponerPreferencia(this@ProfileActivity, prefsOption, selectedItem)
                     //Toast.makeText(this@ProfileActivity, "Selected: $selectedItem", Toast.LENGTH_SHORT).show()
                     val handler = Handler(Looper.getMainLooper())
                     handler.postDelayed({recreateActivity()}, 100)
@@ -87,14 +84,22 @@ class ProfileActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.home -> {
+                val intent = Intent(this, HomeActivity::class.java)
+                startActivity(intent)
+                finish()
+                // return true
+                true
+            }
             R.id.perfil -> {
-                // Crear un Intent para iniciar la actividad del perfil
-                val profileIntent = Intent(this, ProfileActivity::class.java)
-                startActivity(profileIntent)
+                val intent = Intent(this, ProfileActivity::class.java)
+                startActivity(intent)
+                finish()
+                // return true
                 true
             }
             R.id.cerrar_sesion -> {
-                // Borrado de datos (sesión)
+                // Borrar datos de sesión
                 val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE).edit()
                 prefs.clear()
                 prefs.apply()
