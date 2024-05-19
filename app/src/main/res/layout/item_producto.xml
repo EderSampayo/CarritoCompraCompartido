@@ -20,4 +20,3 @@
         android:background="@drawable/product_background_porcomprar"
         android:padding="16dp" />
 </LinearLayout>
-

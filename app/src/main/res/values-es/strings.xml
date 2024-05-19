@@ -25,6 +25,9 @@
     <string name="select_theme">Seleccionar Tema</string>
     <string name="product_name_hint">Nombre del producto</string>
     <string name="added_items">Artículos Añadidos</string>
+    <string name="product_exists">El producto ya existe</string>
+    <string name="enter_quantity">Introduce la cantidad</string>
+    <string name="invalid_quantity">Cantidad inválida</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>

@@ -25,6 +25,9 @@
     <string name="select_theme">Select Theme</string>
     <string name="product_name_hint">Product Name</string>
     <string name="added_items">Added Items</string>
+    <string name="product_exists">Product already exists</string>
+    <string name="enter_quantity">Enter quantity</string>
+    <string name="invalid_quantity">Invalid quantity</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>

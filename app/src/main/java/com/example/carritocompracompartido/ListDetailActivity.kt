@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -47,8 +48,10 @@ class ListDetailActivity : AppCompatActivity() {
             compradosAdapter.removeProducto(producto)
         }
         porComprarAdapter = ProductosAdapter(false) { producto ->
-            compradosAdapter.addProducto(producto)
-            porComprarAdapter.removeProducto(producto)
+            showQuantityDialog(producto) { quantity ->
+                compradosAdapter.addProducto(mapOf("nombre" to producto["nombre"].toString(), "cantidad" to quantity))
+                porComprarAdapter.removeProducto(producto)
+            }
         }
 
         recyclerComprados.adapter = compradosAdapter
@@ -75,10 +78,41 @@ class ListDetailActivity : AppCompatActivity() {
             .setTitle(getString(R.string.add_product))
             .setView(dialogView)
             .setPositiveButton(getString(R.string.add)) { dialog, _ ->
-                val productName = productNameEditText.text.toString().trim()
+                val productName = productNameEditText.text.toString().trim().lowercase()
                 if (productName.isNotEmpty()) {
-                    val newProduct = mapOf("nombre" to productName)
-                    porComprarAdapter.addProducto(newProduct)
+                    val allProducts = porComprarAdapter.getProductos() + compradosAdapter.getProductos()
+                    val existingProduct = allProducts.find {
+                        it["nombre"]?.toString()?.equals(productName, ignoreCase = true) == true
+                    }
+                    if (existingProduct != null) {
+                        Toast.makeText(this, getString(R.string.product_exists), Toast.LENGTH_SHORT).show()
+                    } else {
+                        val newProduct = mapOf("nombre" to productName, "cantidad" to 1)
+                        porComprarAdapter.addProducto(newProduct)
+                    }
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
+    }
+
+    private fun showQuantityDialog(producto: Map<String, Any>, onQuantityEntered: (Int) -> Unit) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_quantity, null)
+        val quantityEditText = dialogView.findViewById<EditText>(R.id.quantityEditText)
+
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.enter_quantity))
+            .setView(dialogView)
+            .setPositiveButton(getString(R.string.add)) { dialog, _ ->
+                val quantity = quantityEditText.text.toString().toIntOrNull()
+                if (quantity != null && quantity > 0) {
+                    onQuantityEntered(quantity)
+                } else {
+                    Toast.makeText(this, getString(R.string.invalid_quantity), Toast.LENGTH_SHORT).show()
                 }
                 dialog.dismiss()
             }
@@ -111,11 +145,13 @@ class ListDetailActivity : AppCompatActivity() {
                 val dragData = item.text.toString()
                 view.setBackgroundColor(Color.TRANSPARENT)
 
-                val newList = mapOf("nombre" to dragData)
+                val newList = mapOf("nombre" to dragData, "cantidad" to 1)
 
                 if (view.id == R.id.recyclerComprados) {
                     porComprarAdapter.removeProducto(newList)
-                    compradosAdapter.addProducto(newList)
+                    showQuantityDialog(newList) { quantity ->
+                        compradosAdapter.addProducto(mapOf("nombre" to newList["nombre"].toString(), "cantidad" to quantity))
+                    }
                 } else if (view.id == R.id.recyclerPorComprar) {
                     compradosAdapter.removeProducto(newList)
                     porComprarAdapter.addProducto(newList)
@@ -135,14 +171,11 @@ class ListDetailActivity : AppCompatActivity() {
         db.collection("Listas").document(listId).get()
             .addOnSuccessListener { document ->
                 if (document != null) {
-                    val comprados = document["Comprados"] as? List<String> ?: emptyList()
-                    val porComprar = document["PorComprar"] as? List<String> ?: emptyList()
+                    val comprados = document["Comprados"] as? List<Map<String, Any>> ?: emptyList()
+                    val porComprar = document["PorComprar"] as? List<Map<String, Any>> ?: emptyList()
 
-                    val compradosList = comprados.map { mapOf("nombre" to it) }
-                    val porComprarList = porComprar.map { mapOf("nombre" to it) }
-
-                    compradosAdapter.setProductos(compradosList)
-                    porComprarAdapter.setProductos(porComprarList)
+                    compradosAdapter.setProductos(comprados)
+                    porComprarAdapter.setProductos(porComprar)
                 }
             }
             .addOnFailureListener { e ->
@@ -152,8 +185,8 @@ class ListDetailActivity : AppCompatActivity() {
 
     private fun updateFirestore() {
         listId?.let { listId ->
-            val comprados = compradosAdapter.getProductos().map { it["nombre"].toString() }
-            val porComprar = porComprarAdapter.getProductos().map { it["nombre"].toString() }
+            val comprados = compradosAdapter.getProductos().map { mapOf("nombre" to it["nombre"], "cantidad" to it["cantidad"]) }
+            val porComprar = porComprarAdapter.getProductos().map { mapOf("nombre" to it["nombre"], "cantidad" to it["cantidad"]) }
 
             db.collection("Listas").document(listId)
                 .update("Comprados", comprados, "PorComprar", porComprar)
