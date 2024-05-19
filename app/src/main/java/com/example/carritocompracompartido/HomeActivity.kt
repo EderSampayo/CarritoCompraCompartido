@@ -27,6 +27,11 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
 
 class HomeActivity : AppCompatActivity() {
 
@@ -217,6 +222,23 @@ class HomeActivity : AppCompatActivity() {
                                     }
 
                                     Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
+
+                                    // Enviar notificación a los nuevos usuarios añadidos
+                                    if (validEmails.isNotEmpty()) {
+                                        // Obtener los tokens de los usuarios añadidos
+                                        val tokenTasks = validEmails.map { email ->
+                                            db.collection("Usuarios").whereEqualTo("Email", email).get()
+                                                .continueWith { task ->
+                                                    task.result?.documents?.firstOrNull()?.getString("Token")
+                                                }
+                                        }
+
+                                        Tasks.whenAllComplete(tokenTasks).addOnSuccessListener {
+                                            val tokens = tokenTasks.mapNotNull { it.result }
+                                            enviarNotificacion(tokens, "Se te ha añadido a una lista", "Has sido añadido a la lista: $listName")
+                                        }
+                                    }
+
                                     finish()
                                     startActivity(intent)
                                 }
@@ -377,6 +399,21 @@ class HomeActivity : AppCompatActivity() {
                             Log.w("Firestore", "Error updating user documents", e)
                             // Manejar el error, por ejemplo, mostrando un mensaje al usuario
                         }
+
+                        // Obtener los tokens de los usuarios añadidos a la lista
+                        val tokenTasks = users.map { email ->
+                            db.collection("Usuarios").whereEqualTo("Email", email).get()
+                                .continueWith { task ->
+                                    task.result?.documents?.firstOrNull()?.getString("Token")
+                                }
+                        }
+                        Log.d("sexo", tokenTasks.toString())
+
+                        Tasks.whenAllComplete(tokenTasks).addOnSuccessListener {
+                            val tokens = tokenTasks.mapNotNull { it.result }
+                            Log.d("sexo3", tokens.toString())
+                            enviarNotificacion(tokens, "Se te ha añadido a una lista", "Has sido añadido a la lista: $listName")
+                        }
                     }
                     .addOnFailureListener { e ->
                         Log.w("Firestore", "Error adding document", e)
@@ -432,6 +469,41 @@ class HomeActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    // Función para enviar notificaciones
+    private fun enviarNotificacion(tokens: List<String>, title: String, body: String) {
+        Log.d("Notificación", "Enviando notificación")
+        val url = "http://34.121.128.202:81/notificarUsuariosCarrito.php"
+        val client = OkHttpClient()
+        val json = JSONObject()
+        json.put("tokens", JSONArray(tokens)) // Asegurarse de que tokens sea un JSONArray
+        json.put("title", title)
+        json.put("body", body)
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+        val requestBody = RequestBody.create(mediaType, json.toString())
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("Notificación", "Error al enviar notificación", e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    Log.d("Notificación", "Notificación enviada correctamente")
+                    Log.d("Notificación", "Respuesta del servidor: $responseBody")
+                } else {
+                    val responseBody = response.body?.string()
+                    Log.e("Notificación", "Error al enviar notificación: ${response.code}")
+                    Log.e("Notificación", "Respuesta del servidor: $responseBody")
+                }
+            }
+        })
     }
 }
 
