@@ -28,6 +28,9 @@
     <string name="product_exists">Product already exists</string>
     <string name="enter_quantity">Enter quantity</string>
     <string name="invalid_quantity">Invalid quantity</string>
+    <string name="delete_product">Delete Product</string>
+    <string name="confirm_delete_product">Are you sure you want to delete this product?</string>
+    <string name="delete">Delete</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>

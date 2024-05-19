@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 
 class ProductosAdapter(
@@ -54,10 +55,30 @@ class ProductosAdapter(
         holder.itemView.setOnClickListener {
             onItemClicked(producto)
         }
+
+        holder.itemView.setOnLongClickListener {
+            showDeleteConfirmationDialog(holder.itemView.context, producto)
+            true
+        }
     }
 
     override fun getItemCount(): Int {
         return productos.size
+    }
+
+    private fun showDeleteConfirmationDialog(context: android.content.Context, producto: Map<String, Any>) {
+        AlertDialog.Builder(context)
+            .setTitle(R.string.delete_product)
+            .setMessage(R.string.confirm_delete_product)
+            .setPositiveButton(R.string.delete) { dialog, _ ->
+                removeProducto(producto)
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
     }
 
     class ProductoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

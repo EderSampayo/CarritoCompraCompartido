@@ -28,6 +28,9 @@
     <string name="product_exists">Produktua dagoeneko badago</string>
     <string name="enter_quantity">Idatzi kantitatea</string>
     <string name="invalid_quantity">Kantitate baliogabea</string>
+    <string name="delete_product">Produktua Ezabatu</string>
+    <string name="confirm_delete_product">Ziur zaude produktua ezabatu nahi duzula?</string>
+    <string name="delete">Ezabatu</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>

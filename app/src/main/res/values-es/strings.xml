@@ -28,6 +28,9 @@
     <string name="product_exists">El producto ya existe</string>
     <string name="enter_quantity">Introduce la cantidad</string>
     <string name="invalid_quantity">Cantidad inválida</string>
+    <string name="delete_product">Eliminar Producto</string>
+    <string name="confirm_delete_product">¿Estás seguro de que deseas eliminar este producto?</string>
+    <string name="delete">Eliminar</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>
