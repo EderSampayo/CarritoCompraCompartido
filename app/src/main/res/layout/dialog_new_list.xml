@@ -28,26 +28,26 @@
         android:id="@+id/addListButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="16dp"
-        android:text="@string/add_list"
+        android:layout_margin="16dp"
         android:backgroundTint="@color/button_background"
         android:foregroundTint="@color/button_text"
-        android:tint="@color/button_text"
-        android:textColor="@color/button_text"/>
+        android:text="@string/add_list"
+        android:textColor="@color/button_text"
+        android:tint="@color/button_text" />
 
     <Button
         android:id="@+id/cancelButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="16dp"
+        android:layout_alignParentStart="true"
+        android:layout_margin="16dp"
         android:text="@string/cancel"
         android:backgroundTint="@color/button_background"
         android:foregroundTint="@color/button_text"
         android:tint="@color/button_text"
-        android:textColor="@color/button_text"/>/>
+        android:textColor="@color/button_text"/>
 
 </RelativeLayout>
