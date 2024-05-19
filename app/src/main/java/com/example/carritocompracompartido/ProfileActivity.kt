@@ -111,7 +111,8 @@ class ProfileActivity : AppCompatActivity() {
                 prefs.clear()
                 prefs.apply()
                 FirebaseAuth.getInstance().signOut()
-                onBackPressed()
+                startActivity(Intent(this, AuthActivity::class.java))
+                finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)
