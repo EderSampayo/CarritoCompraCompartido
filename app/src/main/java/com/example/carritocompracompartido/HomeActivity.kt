@@ -288,6 +288,8 @@ class HomeActivity : AppCompatActivity() {
 
         val dialog = builder.create()
         dialog.show()
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, R.color.positive_button))
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(this, R.color.negative_button))
 
         leaveListButton.setOnClickListener {
             val updatedUsers = currentUsers.toMutableList()
@@ -462,6 +464,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_home, menu)
+        Utils.loadProfileImage(this, menu)
         return true
     }
 
