@@ -107,7 +107,7 @@ class ListDetailActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_quantity, null)
         val quantityEditText = dialogView.findViewById<EditText>(R.id.quantityEditText)
 
-        AlertDialog.Builder(this)
+        var dialog = AlertDialog.Builder(this)
             .setTitle(getString(R.string.enter_quantity))
             .setView(dialogView)
             .setPositiveButton(getString(R.string.add)) { dialog, _ ->
@@ -123,7 +123,9 @@ class ListDetailActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
             .create()
-            .show()
+        dialog.show()
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, R.color.positive_button))
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(this, R.color.negative_button))
     }
 
     private fun setupDragAndDrop() {
