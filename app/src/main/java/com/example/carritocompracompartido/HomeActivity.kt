@@ -30,6 +30,11 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.QuerySnapshot
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
 
 class HomeActivity : AppCompatActivity() {
 
@@ -258,6 +263,8 @@ class HomeActivity : AppCompatActivity() {
                                             Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
                                             finish()
                                             startActivity(intent)
+                                            // Obtener tokens de los usuarios y enviar notificación
+                                            obtenerYEnviarTokens(validEmails, getString(R.string.list_updated), "¡La lista $listName ha sido actualizada!")
                                         }
                                         .addOnFailureListener { e ->
                                             Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
@@ -422,6 +429,9 @@ class HomeActivity : AppCompatActivity() {
                                         startActivity(intent)
                                         // Finalizar la actividad actual
                                         finish()
+
+                                        // Obtener tokens de los usuarios y enviar notificación
+                                        obtenerYEnviarTokens(validEmails, "¡Se te ha añadido a una lista!", "Has sido añadido a la lista: $listName")
                                     }
                                     .addOnFailureListener { e ->
                                         Log.w("Firestore", "Error updating user documents", e)
@@ -479,6 +489,59 @@ class HomeActivity : AppCompatActivity() {
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    // Función para enviar notificaciones
+    private fun enviarNotificacion(tokens: List<String>, title: String, body: String) {
+        Log.d("Notificación", "Enviando notificación")
+        val url = "http://34.121.128.202:81/notificarUsuariosCarrito.php"
+        val client = OkHttpClient()
+        val json = JSONObject()
+        json.put("tokens", JSONArray(tokens)) // Asegurarse de que tokens sea un JSONArray
+        json.put("title", title)
+        json.put("body", body)
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+        val requestBody = RequestBody.create(mediaType, json.toString())
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("Notificación", "Error al enviar notificación", e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    Log.d("Notificación", "Notificación enviada correctamente")
+                    Log.d("Notificación", "Respuesta del servidor: $responseBody")
+                } else {
+                    val responseBody = response.body?.string()
+                    Log.e("Notificación", "Error al enviar notificación: ${response.code}")
+                    Log.e("Notificación", "Respuesta del servidor: $responseBody")
+                }
+            }
+        })
+    }
+
+    // Función para obtener tokens y enviar notificación
+    private fun obtenerYEnviarTokens(emails: List<String>, title: String, body: String) {
+        val tokenTasks = emails.map { email ->
+            db.collection("Usuarios").whereEqualTo("Email", email).get()
+        }
+
+        Tasks.whenAllSuccess<QuerySnapshot>(tokenTasks).addOnSuccessListener { snapshots ->
+            val tokens = snapshots.flatMap { snapshot ->
+                snapshot.documents.mapNotNull { document ->
+                    document.getString("Token")
+                }
+            }
+            enviarNotificacion(tokens, title, body)
+        }.addOnFailureListener { e ->
+            Log.e("Notificación", "Error al obtener tokens", e)
         }
     }
 }
