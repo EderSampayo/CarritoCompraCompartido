@@ -38,6 +38,10 @@
     <string name="current_users">Erabiltzaileak</string>
     <string name="email_not_exist">Helbide elektronikoa %s ez dago</string>
     <string name="emails_not_exist">Helbide elektronikoak %s ez daude</string>
+    <string name="profile_image">Profil Irudia</string>
+    <string name="change_profile_image">Profil Irudia Aldatu</string>
+    <string name="profile_image_updated">Profil irudia ondo eguneratu da</string>
+    <string name="profile_image_update_failed">Profil irudia eguneratzean errorea</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>
