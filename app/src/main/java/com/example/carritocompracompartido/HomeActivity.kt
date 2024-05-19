@@ -463,7 +463,7 @@ class HomeActivity : AppCompatActivity() {
         dialog.window?.setLayout((Resources.getSystem().displayMetrics.widthPixels * 0.85).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_home, menu)
         Utils.loadProfileImage(this, menu)
         return true
