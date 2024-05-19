@@ -2,9 +2,9 @@
     <!-- Base application theme. -->
     <style name="Theme.CarritoCompraCompartido" parent="Theme.AppCompat.DayNight.DarkActionBar">
         <!-- Customize your light theme here. -->
-        <item name="colorPrimary">@color/white</item>
-        <item name="colorPrimaryDark">@color/white</item>
-        <item name="colorAccent">@color/white</item>
+        <item name="colorPrimary">@color/button_background</item>
+        <item name="colorPrimaryDark">@color/background</item>
+        <item name="colorAccent">@color/background</item>
         <item name="background">@color/background</item>
     </style>
 </resources>
