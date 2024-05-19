@@ -67,7 +67,7 @@ class ProductosAdapter(
     }
 
     private fun showDeleteConfirmationDialog(context: android.content.Context, producto: Map<String, Any>) {
-        AlertDialog.Builder(context)
+        val dialog = AlertDialog.Builder(context)
             .setTitle(R.string.delete_product)
             .setMessage(R.string.confirm_delete_product)
             .setPositiveButton(R.string.delete) { dialog, _ ->
@@ -78,7 +78,9 @@ class ProductosAdapter(
                 dialog.dismiss()
             }
             .create()
-            .show()
+        dialog.show()
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(context, R.color.positive_button))
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(context, R.color.negative_button))
     }
 
     class ProductoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
