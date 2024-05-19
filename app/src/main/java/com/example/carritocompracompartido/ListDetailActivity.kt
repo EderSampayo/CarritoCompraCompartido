@@ -216,6 +216,7 @@ class ListDetailActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_home, menu)
+        Utils.loadProfileImage(this, menu)
         return true
     }
 
