@@ -470,15 +470,12 @@ class HomeActivity : AppCompatActivity() {
                 true
             }
             R.id.cerrar_sesion -> {
-                // Borrar datos de sesión
-                Utils.limpiarPreferencias(this)
-
-                // Cerrar sesión
+                val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE).edit()
+                prefs.clear()
+                prefs.apply()
                 FirebaseAuth.getInstance().signOut()
-
-                // Navegar hacia atrás
-                onBackPressed()
-
+                startActivity(Intent(this, AuthActivity::class.java))
+                finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)
