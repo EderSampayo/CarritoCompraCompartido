@@ -3,7 +3,9 @@ package com.example.carritocompracompartido
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.res.Resources
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
@@ -27,11 +29,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.IOException
+import com.google.firebase.firestore.QuerySnapshot
 
 class HomeActivity : AppCompatActivity() {
 
@@ -72,11 +70,13 @@ class HomeActivity : AppCompatActivity() {
                     }
                 }
 
-                Tasks.whenAllComplete(tasks).addOnSuccessListener {
-                    showListInfo(lists)
-                }.addOnFailureListener { exception ->
-                    Log.w("Firestore", "Error getting all list documents: ", exception)
-                }
+                Tasks.whenAllComplete(tasks)
+                    .addOnSuccessListener {
+                        showListInfo(lists)
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.w("Firestore", "Error getting all list documents: ", exception)
+                    }
             }
             .addOnFailureListener { exception ->
                 Log.w("Firestore", "Error getting user documents: ", exception)
@@ -125,7 +125,23 @@ class HomeActivity : AppCompatActivity() {
                     imageView.layoutParams = LinearLayout.LayoutParams(32.dpToPx(), 32.dpToPx()).apply {
                         marginEnd = 4.dpToPx()
                     }
-                    imageView.setImageResource(R.drawable.ic_user_placeholder) // Añadir un placeholder, puedes cambiar esto para mostrar imágenes reales
+
+                    // Obtener la foto del usuario de Firestore
+                    db.collection("Usuarios").document(users[i]).get()
+                        .addOnSuccessListener { document ->
+                            val imageString = document.getString("Foto")
+                            if (!imageString.isNullOrEmpty()) {
+                                val imageBytes = Base64.decode(imageString, Base64.DEFAULT)
+                                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                imageView.setImageBitmap(bitmap)
+                            } else {
+                                imageView.setImageResource(R.drawable.ic_user_placeholder)
+                            }
+                        }
+                        .addOnFailureListener {
+                            imageView.setImageResource(R.drawable.ic_user_placeholder)
+                        }
+
                     holder.userImageLayout.addView(imageView)
                 } else if (i == maxUsersToShow) {
                     val imageView = ImageView(holder.userImageLayout.context)
@@ -186,89 +202,73 @@ class HomeActivity : AppCompatActivity() {
                 val newEmails = emailsEditText.text.toString().trim()
 
                 if (listName.isNotEmpty()) {
-                    if (newEmails.isNotEmpty()) {
-                        val emailArray = newEmails.split(",").map { it.trim() }
-                        val validEmails = mutableListOf<String>()
-                        val invalidEmails = mutableListOf<String>()
+                    val newUsers = if (newEmails.isNotEmpty()) {
+                        newEmails.split(",").map { it.trim() }
+                    } else {
+                        emptyList()
+                    }
 
-                        val tasks = emailArray.map { email ->
-                            db.collection("Usuarios").whereEqualTo("Email", email).get()
-                                .addOnSuccessListener { querySnapshot ->
-                                    if (!querySnapshot.isEmpty) {
-                                        validEmails.add(email)
-                                    } else {
-                                        invalidEmails.add(email)
-                                    }
+                    // Verificar si los nuevos usuarios existen
+                    val validEmails = mutableListOf<String>()
+                    val invalidEmails = mutableListOf<String>()
+                    val tasks = mutableListOf<Task<QuerySnapshot>>()
+
+                    for (email in newUsers) {
+                        val task = db.collection("Usuarios").whereEqualTo("Email", email).get()
+                            .addOnSuccessListener { querySnapshot ->
+                                if (!querySnapshot.isEmpty) {
+                                    validEmails.add(email)
+                                } else {
+                                    invalidEmails.add(email)
                                 }
-                        }
+                            }
+                        tasks.add(task)
+                    }
 
-                        Tasks.whenAllComplete(tasks).addOnSuccessListener {
-                            db.collection("Listas").document(listId)
-                                .update(mapOf(
-                                    "Nombre" to listName,
-                                    "Usuarios" to currentUsers + validEmails
-                                ))
-                                .addOnSuccessListener {
-                                    // Actualiza los usuarios válidos
-                                    validEmails.forEach { email ->
-                                        db.collection("Usuarios").whereEqualTo("Email", email).get()
-                                            .addOnSuccessListener { querySnapshot ->
-                                                if (!querySnapshot.isEmpty) {
-                                                    val userDocId = querySnapshot.documents[0].id
-                                                    db.collection("Usuarios").document(userDocId)
-                                                        .update("Listas", FieldValue.arrayUnion(listId))
-                                                }
-                                            }
-                                    }
-
-                                    Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
-
-                                    // Enviar notificación a los nuevos usuarios añadidos
-                                    if (validEmails.isNotEmpty()) {
-                                        // Obtener los tokens de los usuarios añadidos
-                                        val tokenTasks = validEmails.map { email ->
-                                            db.collection("Usuarios").whereEqualTo("Email", email).get()
-                                                .continueWith { task ->
-                                                    task.result?.documents?.firstOrNull()?.getString("Token")
-                                                }
-                                        }
-
-                                        Tasks.whenAllComplete(tokenTasks).addOnSuccessListener {
-                                            val tokens = tokenTasks.mapNotNull { it.result }
-                                            enviarNotificacion(tokens, "Se te ha añadido a una lista", "Has sido añadido a la lista: $listName")
-                                        }
-                                    }
-
-                                    finish()
-                                    startActivity(intent)
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
-                                    Log.w("Firestore", "Error updating document", e)
-                                }
-
+                    Tasks.whenAllComplete(tasks)
+                        .addOnSuccessListener {
                             if (invalidEmails.isNotEmpty()) {
                                 val message = if (invalidEmails.size == 1) {
                                     getString(R.string.email_not_exist, invalidEmails[0])
                                 } else {
                                     getString(R.string.emails_not_exist, invalidEmails.joinToString(", "))
                                 }
-                                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                             }
+
+                            db.collection("Listas").document(listId)
+                                .update("Nombre", listName, "Usuarios", currentUsers + validEmails)
+                                .addOnSuccessListener {
+                                    // Actualizar las listas de los nuevos usuarios
+                                    val updateUserLists = validEmails.map { email ->
+                                        db.collection("Usuarios").whereEqualTo("Email", email).get()
+                                            .continueWithTask { querySnapshot ->
+                                                if (!querySnapshot.result.isEmpty) {
+                                                    val userDoc = querySnapshot.result.documents[0]
+                                                    db.collection("Usuarios").document(userDoc.id)
+                                                        .update("Listas", FieldValue.arrayUnion(listId))
+                                                } else {
+                                                    Tasks.forResult(null)
+                                                }
+                                            }
+                                    }
+
+                                    Tasks.whenAllComplete(updateUserLists)
+                                        .addOnSuccessListener {
+                                            Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
+                                            finish()
+                                            startActivity(intent)
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
+                                            Log.w("Firestore", "Error updating user documents", e)
+                                        }
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
+                                    Log.w("Firestore", "Error updating document", e)
+                                }
                         }
-                    } else {
-                        db.collection("Listas").document(listId)
-                            .update("Nombre", listName)
-                            .addOnSuccessListener {
-                                Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
-                                finish()
-                                startActivity(intent)
-                            }
-                            .addOnFailureListener { e ->
-                                Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
-                                Log.w("Firestore", "Error updating document", e)
-                            }
-                    }
                 } else {
                     Toast.makeText(this, R.string.list_name_empty, Toast.LENGTH_SHORT).show()
                 }
@@ -304,17 +304,6 @@ class HomeActivity : AppCompatActivity() {
                 db.collection("Listas").document(listId)
                     .update("Usuarios", updatedUsers)
                     .addOnSuccessListener {
-                        currentUserEmail?.let { email ->
-                            db.collection("Usuarios").whereEqualTo("Email", email).get()
-                                .addOnSuccessListener { querySnapshot ->
-                                    if (!querySnapshot.isEmpty) {
-                                        val userDocId = querySnapshot.documents[0].id
-                                        db.collection("Usuarios").document(userDocId)
-                                            .update("Listas", FieldValue.arrayRemove(listId))
-                                    }
-                                }
-                        }
-
                         Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
                         finish()
                         startActivity(intent)
@@ -322,6 +311,23 @@ class HomeActivity : AppCompatActivity() {
                     .addOnFailureListener { e ->
                         Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
                         Log.w("Firestore", "Error updating document", e)
+                    }
+            }
+
+            // Eliminar la lista del array de listas del usuario
+            currentUserEmail?.let {
+                db.collection("Usuarios").whereEqualTo("Email", it).get()
+                    .addOnSuccessListener { querySnapshot ->
+                        for (document in querySnapshot.documents) {
+                            db.collection("Usuarios").document(document.id)
+                                .update("Listas", FieldValue.arrayRemove(listId))
+                                .addOnFailureListener { e ->
+                                    Log.w("Firestore", "Error removing list from user document", e)
+                                }
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Log.w("Firestore", "Error getting user documents", e)
                     }
             }
 
@@ -356,68 +362,76 @@ class HomeActivity : AppCompatActivity() {
                     listOf(currentUserEmail)
                 }
 
-                val newList = hashMapOf(
-                    "Nombre" to listName,
-                    "Comprados" to emptyList<String>(),
-                    "PorComprar" to emptyList<String>(),
-                    "Usuarios" to users
-                )
+                // Verificar si los usuarios existen
+                val validEmails = mutableListOf<String>()
+                val invalidEmails = mutableListOf<String>()
+                val tasks = mutableListOf<Task<QuerySnapshot>>()
 
-                db.collection("Listas")
-                    .add(newList)
-                    .addOnSuccessListener { documentReference ->
-                        Log.d("Firestore", "DocumentSnapshot added with ID: ${documentReference.id}")
+                for (email in users) {
+                    val task = db.collection("Usuarios").whereEqualTo("Email", email).get()
+                        .addOnSuccessListener { querySnapshot ->
+                            if (!querySnapshot.isEmpty) {
+                                validEmails.add(email)
+                            } else {
+                                invalidEmails.add(email)
+                            }
+                        }
+                    tasks.add(task)
+                }
 
-                        val updateUserLists = users.map { email ->
-                            db.collection("Usuarios")
-                                .whereEqualTo("Email", email)
-                                .get()
-                                .continueWithTask { querySnapshot ->
-                                    if (!querySnapshot.result.isEmpty) {
-                                        val userDoc = querySnapshot.result.documents[0]
-                                        db.collection("Usuarios").document(userDoc.id)
-                                            .update("Listas", FieldValue.arrayUnion(documentReference.id))
-                                    } else {
-                                        val newUser = hashMapOf(
-                                            "Email" to email,
-                                            "Foto" to "",
-                                            "Listas" to listOf(documentReference.id),
-                                            "Token" to ""
-                                        )
-                                        db.collection("Usuarios").add(newUser)
+                Tasks.whenAllComplete(tasks)
+                    .addOnSuccessListener {
+                        if (invalidEmails.isNotEmpty()) {
+                            val message = if (invalidEmails.size == 1) {
+                                getString(R.string.email_not_exist, invalidEmails[0])
+                            } else {
+                                getString(R.string.emails_not_exist, invalidEmails.joinToString(", "))
+                            }
+                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                        }
+
+                        val newList = hashMapOf(
+                            "Nombre" to listName,
+                            "Comprados" to emptyList<String>(),
+                            "PorComprar" to emptyList<String>(),
+                            "Usuarios" to validEmails
+                        )
+
+                        db.collection("Listas")
+                            .add(newList)
+                            .addOnSuccessListener { documentReference ->
+                                Log.d("Firestore", "DocumentSnapshot added with ID: ${documentReference.id}")
+
+                                val updateUserLists = validEmails.map { email ->
+                                    db.collection("Usuarios").whereEqualTo("Email", email).get()
+                                        .continueWithTask { querySnapshot ->
+                                            if (!querySnapshot.result.isEmpty) {
+                                                val userDoc = querySnapshot.result.documents[0]
+                                                db.collection("Usuarios").document(userDoc.id)
+                                                    .update("Listas", FieldValue.arrayUnion(documentReference.id))
+                                            } else {
+                                                Tasks.forResult(null)
+                                            }
+                                        }
+                                }
+
+                                Tasks.whenAllComplete(updateUserLists)
+                                    .addOnSuccessListener {
+                                        // Iniciar una nueva instancia de HomeActivity después de que todos los usuarios se hayan actualizado
+                                        val intent = Intent(this, HomeActivity::class.java)
+                                        startActivity(intent)
+                                        // Finalizar la actividad actual
+                                        finish()
                                     }
-                                }
-                        }
-
-                        Tasks.whenAllComplete(updateUserLists).addOnSuccessListener {
-                            // Iniciar una nueva instancia de HomeActivity después de que todos los usuarios se hayan actualizado
-                            val intent = Intent(this, HomeActivity::class.java)
-                            startActivity(intent)
-                            // Finalizar la actividad actual
-                            finish()
-                        }.addOnFailureListener { e ->
-                            Log.w("Firestore", "Error updating user documents", e)
-                            // Manejar el error, por ejemplo, mostrando un mensaje al usuario
-                        }
-
-                        // Obtener los tokens de los usuarios añadidos a la lista
-                        val tokenTasks = users.map { email ->
-                            db.collection("Usuarios").whereEqualTo("Email", email).get()
-                                .continueWith { task ->
-                                    task.result?.documents?.firstOrNull()?.getString("Token")
-                                }
-                        }
-                        Log.d("sexo", tokenTasks.toString())
-
-                        Tasks.whenAllComplete(tokenTasks).addOnSuccessListener {
-                            val tokens = tokenTasks.mapNotNull { it.result }
-                            Log.d("sexo3", tokens.toString())
-                            enviarNotificacion(tokens, "Se te ha añadido a una lista", "Has sido añadido a la lista: $listName")
-                        }
-                    }
-                    .addOnFailureListener { e ->
-                        Log.w("Firestore", "Error adding document", e)
-                        // Manejar el error, por ejemplo, mostrando un mensaje al usuario
+                                    .addOnFailureListener { e ->
+                                        Log.w("Firestore", "Error updating user documents", e)
+                                        // Manejar el error, por ejemplo, mostrando un mensaje al usuario
+                                    }
+                            }
+                            .addOnFailureListener { e ->
+                                Log.w("Firestore", "Error adding document", e)
+                                // Manejar el error, por ejemplo, mostrando un mensaje al usuario
+                            }
                     }
             } else {
                 Toast.makeText(this, R.string.list_name_empty, Toast.LENGTH_SHORT).show()
@@ -456,54 +470,16 @@ class HomeActivity : AppCompatActivity() {
                 true
             }
             R.id.cerrar_sesion -> {
-                // Borrar datos de sesión
-                Utils.limpiarPreferencias(this)
-
-                // Cerrar sesión
+                val prefs = getSharedPreferences(getString(R.string.prefs_file), MODE_PRIVATE).edit()
+                prefs.clear()
+                prefs.apply()
                 FirebaseAuth.getInstance().signOut()
-
-                // Navegar hacia atrás
-                onBackPressed()
-
+                startActivity(Intent(this, AuthActivity::class.java))
+                finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
-
-    // Función para enviar notificaciones
-    private fun enviarNotificacion(tokens: List<String>, title: String, body: String) {
-        Log.d("Notificación", "Enviando notificación")
-        val url = "http://34.121.128.202:81/notificarUsuariosCarrito.php"
-        val client = OkHttpClient()
-        val json = JSONObject()
-        json.put("tokens", JSONArray(tokens)) // Asegurarse de que tokens sea un JSONArray
-        json.put("title", title)
-        json.put("body", body)
-        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
-        val requestBody = RequestBody.create(mediaType, json.toString())
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e("Notificación", "Error al enviar notificación", e)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    val responseBody = response.body?.string()
-                    Log.d("Notificación", "Notificación enviada correctamente")
-                    Log.d("Notificación", "Respuesta del servidor: $responseBody")
-                } else {
-                    val responseBody = response.body?.string()
-                    Log.e("Notificación", "Error al enviar notificación: ${response.code}")
-                    Log.e("Notificación", "Respuesta del servidor: $responseBody")
-                }
-            }
-        })
     }
 }
 

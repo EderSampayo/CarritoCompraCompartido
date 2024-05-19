@@ -3,8 +3,14 @@ package com.example.carritocompracompartido
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
+import android.util.Base64
+import android.view.Menu
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Locale
 
 object Utils {
@@ -60,4 +66,24 @@ object Utils {
         context.createConfigurationContext(configuration)
         resources.updateConfiguration(configuration, resources.displayMetrics)
     }
+
+    fun loadProfileImage(context: Context, menu: Menu) {
+        val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email
+        currentUserEmail?.let {
+            val db = FirebaseFirestore.getInstance()
+            db.collection("Usuarios").whereEqualTo("Email", it).get()
+                .addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        val imageString = document.getString("Foto")
+                        if (!imageString.isNullOrEmpty()) {
+                            val imageBytes = Base64.decode(imageString, Base64.DEFAULT)
+                            val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                            val drawable = BitmapDrawable(context.resources, bitmap)
+                            menu.findItem(R.id.perfil)?.icon = drawable
+                        }
+                    }
+                }
+        }
+    }
+
 }

@@ -38,6 +38,10 @@
     <string name="current_users">Current Users</string>
     <string name="email_not_exist">The email %s does not exist</string>
     <string name="emails_not_exist">The emails %s do not exist</string>
+    <string name="profile_image">Profile Image</string>
+    <string name="change_profile_image">Change Profile Image</string>
+    <string name="profile_image_updated">Profile image updated successfully</string>
+    <string name="profile_image_update_failed">Failed to update profile image</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>
