@@ -11,4 +11,9 @@
     <color name="coral">#FF8A65</color>
     <color name="background">#E5EAF0</color>
     <color name="icon_color">#FFFFFF</color>
+    <color name="text_color">#000000</color>
+    <color name="button_background">#FF0000</color>
+    <color name="button_text">#000000</color>
+    <color name="positive_button">#000000</color>
+    <color name="negative_button">#000000</color>
 </resources>

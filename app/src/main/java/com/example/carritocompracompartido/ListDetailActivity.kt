@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
@@ -74,7 +75,7 @@ class ListDetailActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_product, null)
         val productNameEditText = dialogView.findViewById<EditText>(R.id.productNameEditText)
 
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle(getString(R.string.add_product))
             .setView(dialogView)
             .setPositiveButton(getString(R.string.add)) { dialog, _ ->
@@ -97,7 +98,9 @@ class ListDetailActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
             .create()
-            .show()
+        dialog.show()
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, R.color.positive_button))
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(this, R.color.negative_button))
     }
 
     private fun showQuantityDialog(producto: Map<String, Any>, onQuantityEntered: (Int) -> Unit) {
