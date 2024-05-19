@@ -1,6 +1,9 @@
 package com.example.carritocompracompartido
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +12,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -17,10 +22,12 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.util.Util
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 
-/**Extraído de MoureDev
+/** Auth con Email extraído de MoureDev
 Vídeo: https://www.youtube.com/watch?v=dpURgJ4HkMk&t=25s
 Autor: https://www.youtube.com/@mouredev
  **/
@@ -35,6 +42,7 @@ class AuthActivity : AppCompatActivity() {
     private lateinit var passwordEditText: EditText
     private lateinit var authLayout: View
     private lateinit var googleButton: Button
+    private lateinit var tokenFCM: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Utils.setLanguage(this)
@@ -55,6 +63,11 @@ class AuthActivity : AppCompatActivity() {
             Toast.makeText(this, "Google Play Services required", Toast.LENGTH_LONG).show()
         }
 
+        // Obtener permisos
+        obtenerPermisos()
+        // Obtener el token de FCM
+        obtenerTokenFCM()
+
         // Setup
         setup()
         session()
@@ -71,6 +84,7 @@ class AuthActivity : AppCompatActivity() {
         val provider = Utils.obtenerPreferencia(this, "provider")
 
         if (email != null && provider != null) {
+            actualizarTokenFirestore(email, this.tokenFCM)  // Por si acaso
             authLayout.visibility = View.INVISIBLE
             navigateToHome(email, ProviderType.valueOf(provider))
         }
@@ -84,6 +98,7 @@ class AuthActivity : AppCompatActivity() {
                 FirebaseAuth.getInstance()
                     .createUserWithEmailAndPassword(emailEditText.text.toString(), passwordEditText.text.toString()).addOnCompleteListener {
                         if (it.isSuccessful) {
+                            registrarDatosFirestore(emailEditText.text.toString(), this.tokenFCM)
                             Utils.ponerPreferencia(this, "email", emailEditText.text.toString())
                             Utils.ponerPreferencia(this, "provider", ProviderType.BASIC.toString())
                             navigateToHome(it.result?.user?.email ?: "", ProviderType.BASIC)    // Si no existe el email, se manda un string vacío, aunque nunca debería pasar por la comprobación de antes
@@ -99,6 +114,7 @@ class AuthActivity : AppCompatActivity() {
                 FirebaseAuth.getInstance()
                     .signInWithEmailAndPassword(emailEditText.text.toString(), passwordEditText.text.toString()).addOnCompleteListener {
                         if (it.isSuccessful) {
+                            actualizarTokenFirestore(emailEditText.text.toString(), this.tokenFCM)
                             Utils.ponerPreferencia(this, "email", emailEditText.text.toString())
                             Utils.ponerPreferencia(this, "provider", ProviderType.BASIC.toString())
                             navigateToHome(it.result?.user?.email ?: "", ProviderType.BASIC)    // Si no existe el email, se manda un string vacío, aunque nunca debería pasar por la comprobación de antes
@@ -161,7 +177,19 @@ class AuthActivity : AppCompatActivity() {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
         FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener(this) { task ->
             if (task.isSuccessful) {
-                navigateToHome(account.email ?: "", ProviderType.GOOGLE)
+                val email = account.email ?: ""
+                val token = this.tokenFCM
+
+                verificarUsuarioFirestore(email) { exists ->
+                    if (exists) {
+                        // Si el usuario ya existe, solo actualizamos el token (por si se ha desinstalado la app o algo relacionado)
+                        actualizarTokenFirestore(email, token)
+                    } else {
+                        // Si el usuario no existe, lo registramos
+                        registrarDatosFirestore(email, token)
+                    }
+                    navigateToHome(email, ProviderType.GOOGLE)
+                }
             } else {
                 showAlert("Error", "Firebase Authentication failed: ${task.exception?.message}")
             }
@@ -181,6 +209,75 @@ class AuthActivity : AppCompatActivity() {
             false
         } else {
             true
+        }
+    }
+
+    private fun obtenerTokenFCM() {
+        // Obtener el token de FCM
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                this.tokenFCM = task.result
+                Log.d("FCM Token", this.tokenFCM ?: "No se ha podido obtener el token")
+
+            } else {
+                // Fallo al obtener el token
+                Toast.makeText(this, "Error al obtener el token.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun obtenerPermisos() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED) {
+                // PEDIR EL PERMISO
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 11)
+            }
+        }
+    }
+
+    // Para el caso de registro (con Email y Google)
+    private fun registrarDatosFirestore(email: String, tokenFCM: String) {
+        val db = FirebaseFirestore.getInstance()
+        val usuario = hashMapOf(
+            "Email" to email,
+            "Token" to tokenFCM
+        )
+
+        db.collection("Usuarios").document(email)
+            .set(usuario)
+            .addOnSuccessListener {
+                Log.d("Firestore", "Usuario registrado correctamente!")
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore", "Error al registrar usuario", e)
+            }
+    }
+
+    // Para el caso de login (con Email y Google)
+    private fun actualizarTokenFirestore(email: String, token: String) {
+        val db = FirebaseFirestore.getInstance()
+        val usuarioRef = db.collection("Usuarios").document(email)
+
+        usuarioRef.update("Token", token)
+            .addOnSuccessListener {
+                Log.d("Firestore", "Token actualizado correctamente!")
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore", "Error al actualizar token", e)
+            }
+    }
+
+    // Para controlar si el usuario ya está registrado o no (con Google)
+    private fun verificarUsuarioFirestore(email: String, callback: (exists: Boolean) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        val usuarioRef = db.collection("Usuarios").document(email)
+
+        usuarioRef.get().addOnSuccessListener { document ->
+            callback(document.exists())
+        }.addOnFailureListener { e ->
+            Log.w("Firestore", "Error al verificar usuario", e)
+            callback(false)  // En caso de error, asumimos que el usuario no existe
         }
     }
 
