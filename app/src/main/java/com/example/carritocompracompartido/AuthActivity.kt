@@ -65,12 +65,13 @@ class AuthActivity : AppCompatActivity() {
 
         // Obtener permisos
         obtenerPermisos()
-        // Obtener el token de FCM
-        obtenerTokenFCM()
+        // Obtener el token de FCM con llamada a session() como callback
+        obtenerTokenFCM {
+            session() // Llamar a session() solo después de que tokenFCM haya sido inicializado
+        }
 
         // Setup
         setup()
-        session()
     }
 
     override fun onStart() {
@@ -212,13 +213,15 @@ class AuthActivity : AppCompatActivity() {
         }
     }
 
-    private fun obtenerTokenFCM() {
+    private fun obtenerTokenFCM(callback: () -> Unit) {
         // Obtener el token de FCM
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 this.tokenFCM = task.result
                 Log.d("FCM Token", this.tokenFCM ?: "No se ha podido obtener el token")
 
+                // Llamar al callback una vez que se obtiene el token
+                callback()
             } else {
                 // Fallo al obtener el token
                 Toast.makeText(this, "Error al obtener el token.", Toast.LENGTH_SHORT).show()
