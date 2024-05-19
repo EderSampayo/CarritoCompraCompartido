@@ -14,9 +14,10 @@
             android:id="@+id/listTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textAppearance="?attr/textAppearanceHeadline4"
             android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:textSize="28sp" />
 
         <TextView
             android:id="@+id/purchasedTitle"

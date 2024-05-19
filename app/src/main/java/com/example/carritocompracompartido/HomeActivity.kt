@@ -111,7 +111,7 @@ class HomeActivity : AppCompatActivity() {
             val users = list["Usuarios"] as? List<String> ?: emptyList()
 
             holder.listNameTextView.text = listName
-            holder.productCountTextView.text = "${products.size} ${getString(R.string.products)}"
+            holder.productCountTextView.text = "${products.size} ${if (products.size == 1) getString(R.string.product) else getString(R.string.products)}"
 
             holder.userImageLayout.removeAllViews() // Limpiar las vistas de usuario antes de añadir nuevas
 
@@ -136,7 +136,7 @@ class HomeActivity : AppCompatActivity() {
             }
 
             holder.editButton.setOnClickListener {
-                showEditDialog(list["id"] as String, listName, users.joinToString(", "))
+                showEditDialog(list["id"] as String, listName, users)
             }
 
             holder.itemView.setOnClickListener {
@@ -144,6 +144,7 @@ class HomeActivity : AppCompatActivity() {
                 if (listId != null) {
                     val intent = Intent(holder.itemView.context, ListDetailActivity::class.java)
                     intent.putExtra("listId", listId)
+                    intent.putExtra("listTitle", listName)
                     holder.itemView.context.startActivity(intent)
                 } else {
                     Log.w("Firestore", "List ID is null or invalid")
@@ -156,24 +157,34 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun showEditDialog(listId: String, currentName: String, currentUsers: String) {
+    private fun showEditDialog(listId: String, currentName: String, currentUsers: List<String>) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_list, null)
-        val listNameEditText = dialogView.findViewById<EditText>(R.id.listNameEditText)
-        val emailsEditText = dialogView.findViewById<EditText>(R.id.emailsEditText)
+        val listNameEditText = dialogView.findViewById<EditText>(R.id.list_name_edit_text)
+        val emailsEditText = dialogView.findViewById<EditText>(R.id.emails_edit_text)
+        val currentUsersLayout = dialogView.findViewById<LinearLayout>(R.id.current_users_layout)
+        val leaveListButton = dialogView.findViewById<Button>(R.id.leave_list_button)
 
         listNameEditText.setText(currentName)
-        emailsEditText.setText(currentUsers)
+
+        val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email
+
+        // Mostrar usuarios actuales
+        for (user in currentUsers) {
+            val userTextView = TextView(this)
+            userTextView.text = user
+            currentUsersLayout.addView(userTextView)
+        }
 
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
             .setTitle(R.string.edit_list_title)
             .setPositiveButton(R.string.save) { dialog, _ ->
                 val listName = listNameEditText.text.toString().trim()
-                val emails = emailsEditText.text.toString().trim()
+                val newEmails = emailsEditText.text.toString().trim()
 
                 if (listName.isNotEmpty()) {
-                    val users = if (emails.isNotEmpty()) {
-                        emails.split(",").map { it.trim() }
+                    val newUsers = if (newEmails.isNotEmpty()) {
+                        newEmails.split(",").map { it.trim() }
                     } else {
                         emptyList()
                     }
@@ -181,7 +192,7 @@ class HomeActivity : AppCompatActivity() {
                     db.collection("Listas").document(listId)
                         .update(mapOf(
                             "Nombre" to listName,
-                            "Usuarios" to users
+                            "Usuarios" to currentUsers + newUsers
                         ))
                         .addOnSuccessListener {
                             Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
@@ -205,13 +216,50 @@ class HomeActivity : AppCompatActivity() {
 
         val dialog = builder.create()
         dialog.show()
+
+        leaveListButton.setOnClickListener {
+            val updatedUsers = currentUsers.toMutableList()
+            currentUserEmail?.let {
+                updatedUsers.remove(it)
+            }
+
+            if (updatedUsers.isEmpty()) {
+                db.collection("Listas").document(listId)
+                    .delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(this, R.string.list_deleted, Toast.LENGTH_SHORT).show()
+                        finish()
+                        startActivity(intent)
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, R.string.error_deleting_list, Toast.LENGTH_SHORT).show()
+                        Log.w("Firestore", "Error deleting document", e)
+                    }
+            } else {
+                db.collection("Listas").document(listId)
+                    .update("Usuarios", updatedUsers)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
+                        finish()
+                        startActivity(intent)
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
+                        Log.w("Firestore", "Error updating document", e)
+                    }
+            }
+
+            dialog.dismiss()
+        }
     }
+
 
     private fun showNewListDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_new_list, null)
         val listNameEditText = dialogView.findViewById<EditText>(R.id.listNameEditText)
         val emailsEditText = dialogView.findViewById<EditText>(R.id.emailsEditText)
         val addListButton = dialogView.findViewById<Button>(R.id.addListButton)
+        val cancelButton = dialogView.findViewById<Button>(R.id.cancelButton)
 
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -290,7 +338,14 @@ class HomeActivity : AppCompatActivity() {
             dialog.dismiss()
         }
 
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
         dialog.show()
+
+        // Ajustar el tamaño del diálogo
+        dialog.window?.setLayout((Resources.getSystem().displayMetrics.widthPixels * 0.85).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

@@ -15,6 +15,7 @@
     <string name="error_updating_list">Errorea zerrenda eguneratzean</string>
     <string name="list_name_empty">Zerrendaren izena ezin da hutsik egon</string>
     <string name="no_name">Izenik gabe</string>
+    <string name="product">produktua</string>
     <string name="products">produktuak</string>
     <string name="add_product">Produktua Gehitu</string>
     <string name="add">Gehitu</string>
@@ -31,6 +32,10 @@
     <string name="delete_product">Produktua Ezabatu</string>
     <string name="confirm_delete_product">Ziur zaude produktua ezabatu nahi duzula?</string>
     <string name="delete">Ezabatu</string>
+    <string name="leave_list">Zerrendatik irten</string>
+    <string name="list_deleted">Zerrenda ezabatuta</string>
+    <string name="error_deleting_list">Errorea zerrenda ezabatzean</string>
+    <string name="current_users">Erabiltzaileak</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>

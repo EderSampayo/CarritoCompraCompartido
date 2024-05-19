@@ -15,6 +15,7 @@
     <string name="error_updating_list">Error updating list</string>
     <string name="list_name_empty">The list name cannot be empty</string>
     <string name="no_name">No name</string>
+    <string name="product">product</string>
     <string name="products">products</string>
     <string name="add_product">Add Product</string>
     <string name="add">Add</string>
@@ -31,6 +32,10 @@
     <string name="delete_product">Delete Product</string>
     <string name="confirm_delete_product">Are you sure you want to delete this product?</string>
     <string name="delete">Delete</string>
+    <string name="leave_list">Leave List</string>
+    <string name="list_deleted">List deleted</string>
+    <string name="error_deleting_list">Error deleting list</string>
+    <string name="current_users">Current Users</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>
