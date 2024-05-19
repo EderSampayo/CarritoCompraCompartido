@@ -19,8 +19,8 @@
     <string name="products">productos</string>
     <string name="add_product">Añadir Producto</string>
     <string name="add">Añadir</string>
-    <string name="purchased">Comprados</string>
-    <string name="to_buy">Por Comprar</string>
+    <string name="purchased">Comprar</string>
+    <string name="to_buy">Historial</string>
     <string name="add_list">Añadir Lista</string>
     <string name="select_language">Seleccionar Idioma</string>
     <string name="select_theme">Seleccionar Tema</string>
