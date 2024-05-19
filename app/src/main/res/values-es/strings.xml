@@ -36,6 +36,8 @@
     <string name="list_deleted">Lista eliminada</string>
     <string name="error_deleting_list">Error al eliminar la lista</string>
     <string name="current_users">Usuarios Actuales</string>
+    <string name="email_not_exist">El correo electrónico %s no existe</string>
+    <string name="emails_not_exist">Los correos electrónicos %s no existen</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>

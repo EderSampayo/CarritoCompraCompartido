@@ -67,13 +67,11 @@ class HomeActivity : AppCompatActivity() {
                     }
                 }
 
-                Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
-                    .addOnSuccessListener {
-                        showListInfo(lists)
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.w("Firestore", "Error getting all list documents: ", exception)
-                    }
+                Tasks.whenAllComplete(tasks).addOnSuccessListener {
+                    showListInfo(lists)
+                }.addOnFailureListener { exception ->
+                    Log.w("Firestore", "Error getting all list documents: ", exception)
+                }
             }
             .addOnFailureListener { exception ->
                 Log.w("Firestore", "Error getting user documents: ", exception)
@@ -183,27 +181,72 @@ class HomeActivity : AppCompatActivity() {
                 val newEmails = emailsEditText.text.toString().trim()
 
                 if (listName.isNotEmpty()) {
-                    val newUsers = if (newEmails.isNotEmpty()) {
-                        newEmails.split(",").map { it.trim() }
-                    } else {
-                        emptyList()
-                    }
+                    if (newEmails.isNotEmpty()) {
+                        val emailArray = newEmails.split(",").map { it.trim() }
+                        val validEmails = mutableListOf<String>()
+                        val invalidEmails = mutableListOf<String>()
 
-                    db.collection("Listas").document(listId)
-                        .update(mapOf(
-                            "Nombre" to listName,
-                            "Usuarios" to currentUsers + newUsers
-                        ))
-                        .addOnSuccessListener {
-                            Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
-                            // Actualiza la vista o recarga la actividad para reflejar los cambios
-                            finish()
-                            startActivity(intent)
+                        val tasks = emailArray.map { email ->
+                            db.collection("Usuarios").whereEqualTo("Email", email).get()
+                                .addOnSuccessListener { querySnapshot ->
+                                    if (!querySnapshot.isEmpty) {
+                                        validEmails.add(email)
+                                    } else {
+                                        invalidEmails.add(email)
+                                    }
+                                }
                         }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
-                            Log.w("Firestore", "Error updating document", e)
+
+                        Tasks.whenAllComplete(tasks).addOnSuccessListener {
+                            db.collection("Listas").document(listId)
+                                .update(mapOf(
+                                    "Nombre" to listName,
+                                    "Usuarios" to currentUsers + validEmails
+                                ))
+                                .addOnSuccessListener {
+                                    // Actualiza los usuarios válidos
+                                    validEmails.forEach { email ->
+                                        db.collection("Usuarios").whereEqualTo("Email", email).get()
+                                            .addOnSuccessListener { querySnapshot ->
+                                                if (!querySnapshot.isEmpty) {
+                                                    val userDocId = querySnapshot.documents[0].id
+                                                    db.collection("Usuarios").document(userDocId)
+                                                        .update("Listas", FieldValue.arrayUnion(listId))
+                                                }
+                                            }
+                                    }
+
+                                    Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
+                                    finish()
+                                    startActivity(intent)
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
+                                    Log.w("Firestore", "Error updating document", e)
+                                }
+
+                            if (invalidEmails.isNotEmpty()) {
+                                val message = if (invalidEmails.size == 1) {
+                                    getString(R.string.email_not_exist, invalidEmails[0])
+                                } else {
+                                    getString(R.string.emails_not_exist, invalidEmails.joinToString(", "))
+                                }
+                                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                            }
                         }
+                    } else {
+                        db.collection("Listas").document(listId)
+                            .update("Nombre", listName)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
+                                finish()
+                                startActivity(intent)
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, R.string.error_updating_list, Toast.LENGTH_SHORT).show()
+                                Log.w("Firestore", "Error updating document", e)
+                            }
+                    }
                 } else {
                     Toast.makeText(this, R.string.list_name_empty, Toast.LENGTH_SHORT).show()
                 }
@@ -239,6 +282,17 @@ class HomeActivity : AppCompatActivity() {
                 db.collection("Listas").document(listId)
                     .update("Usuarios", updatedUsers)
                     .addOnSuccessListener {
+                        currentUserEmail?.let { email ->
+                            db.collection("Usuarios").whereEqualTo("Email", email).get()
+                                .addOnSuccessListener { querySnapshot ->
+                                    if (!querySnapshot.isEmpty) {
+                                        val userDocId = querySnapshot.documents[0].id
+                                        db.collection("Usuarios").document(userDocId)
+                                            .update("Listas", FieldValue.arrayRemove(listId))
+                                    }
+                                }
+                        }
+
                         Toast.makeText(this, R.string.list_updated, Toast.LENGTH_SHORT).show()
                         finish()
                         startActivity(intent)
@@ -252,7 +306,6 @@ class HomeActivity : AppCompatActivity() {
             dialog.dismiss()
         }
     }
-
 
     private fun showNewListDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_new_list, null)
@@ -314,18 +367,16 @@ class HomeActivity : AppCompatActivity() {
                                 }
                         }
 
-                        Tasks.whenAll(updateUserLists)
-                            .addOnSuccessListener {
-                                // Iniciar una nueva instancia de HomeActivity después de que todos los usuarios se hayan actualizado
-                                val intent = Intent(this, HomeActivity::class.java)
-                                startActivity(intent)
-                                // Finalizar la actividad actual
-                                finish()
-                            }
-                            .addOnFailureListener { e ->
-                                Log.w("Firestore", "Error updating user documents", e)
-                                // Manejar el error, por ejemplo, mostrando un mensaje al usuario
-                            }
+                        Tasks.whenAllComplete(updateUserLists).addOnSuccessListener {
+                            // Iniciar una nueva instancia de HomeActivity después de que todos los usuarios se hayan actualizado
+                            val intent = Intent(this, HomeActivity::class.java)
+                            startActivity(intent)
+                            // Finalizar la actividad actual
+                            finish()
+                        }.addOnFailureListener { e ->
+                            Log.w("Firestore", "Error updating user documents", e)
+                            // Manejar el error, por ejemplo, mostrando un mensaje al usuario
+                        }
                     }
                     .addOnFailureListener { e ->
                         Log.w("Firestore", "Error adding document", e)

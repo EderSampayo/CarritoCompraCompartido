@@ -36,6 +36,8 @@
     <string name="list_deleted">List deleted</string>
     <string name="error_deleting_list">Error deleting list</string>
     <string name="current_users">Current Users</string>
+    <string name="email_not_exist">The email %s does not exist</string>
+    <string name="emails_not_exist">The emails %s do not exist</string>
     <string-array name="languages">
         <item>es</item>
         <item>eu</item>
